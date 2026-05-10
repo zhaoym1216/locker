@@ -1,0 +1,324 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== 用户系统 ====================
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique @db.VarChar(50)
+  nickname     String    @db.VarChar(100)
+  email        String?   @unique @db.VarChar(255)
+  phone        String?   @unique @db.VarChar(20)
+  passwordHash String?   @map("password_hash") @db.VarChar(255)
+  avatarUrl    String?   @map("avatar_url") @db.VarChar(500)
+  bio          String?   @db.Text
+  status       Int       @default(0) // 0=正常 1=禁用 2=注销
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // 关联
+  profile      UserProfile?
+  setting      UserSetting?
+  auths        UserAuth[]
+  posts        Post[]
+  comments     Comment[]
+  ownedCircles Circle[]
+  likes        Like[]
+  circleMembers CircleMember[]
+  sentMessages Message[]
+  notifications Notification[] @relation("received_notifications")
+  triggeredNotifications Notification[] @relation("triggered_notifications")
+
+  // 关注关系（作为关注者）
+  following    Follow[] @relation("follower")
+  // 关注关系（作为被关注者）
+  followers    Follow[] @relation("following")
+
+  // 会话
+  conversations ConversationMember[]
+  // 认证
+  verifications Verification[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id         String   @id @default(cuid())
+  userId     String   @unique @map("user_id")
+  realName   String?  @map("real_name") @db.VarChar(50)
+  gender     Int?     // 0=未知 1=男 2=女
+  birthday   DateTime?
+  city       String?  @db.VarChar(50)
+  company    String?  @db.VarChar(100)
+  position   String?  @db.VarChar(100)
+  education  String?  @db.VarChar(100)
+  website    String?  @db.VarChar(500)
+  tags           String[] @default([])
+  verifiedEmail  String?  @map("verified_email") @db.VarChar(255)
+  verifiedCity   String?  @map("verified_city") @db.VarChar(100)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model UserSetting {
+  userId        String @id @map("user_id")
+  privacyLevel  Int    @default(0) @map("privacy_level") // 0=公开 1=好友 2=私密
+  allowSearch   Boolean @default(true) @map("allow_search")
+  notifyConfig  Json   @default("{}") @map("notify_config")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model UserAuth {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  provider     String   @db.VarChar(20) // wechat/github/google
+  providerUid  String   @map("provider_uid") @db.VarChar(255)
+  accessToken  String?  @map("access_token") @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUid])
+  @@map("user_auths")
+}
+
+// ==================== 社交关系 ====================
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
+  status      Int      @default(0) // 0=已关注 1=拉黑
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  follower  User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+// ==================== 圈子系统 ====================
+
+model Circle {
+  id           String    @id @default(cuid())
+  name         String    @unique @db.VarChar(50)
+  description  String?   @db.Text
+  avatarUrl    String?   @map("avatar_url") @db.VarChar(500)
+  coverUrl     String?   @map("cover_url") @db.VarChar(500)
+  type         String    @db.VarChar(20) // INDUSTRY/ALUMNI/INTEREST/REGION/COMPANY/PROJECT/PAID/PRIVATE
+  authMethods  String[]  @map("auth_methods") // EMAIL/INVITE_CODE/APPROVAL/CERTIFICATE/PAYMENT/LOCATION/SOCIAL_GRAPH
+  maxMembers   Int       @default(5000) @map("max_members")
+  memberCount  Int       @default(0) @map("member_count")
+  tags         String[]  @default([])
+  isPublic     Boolean   @default(true) @map("is_public")
+  isSystem     Boolean   @default(false) @map("is_system")
+  inviteCode   String?   @unique @map("invite_code") @db.VarChar(20)
+  ownerId      String    @map("owner_id")
+  status       Int       @default(0) // 0=正常 1=已关闭
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  owner   User           @relation(fields: [ownerId], references: [id])
+  members CircleMember[]
+  posts   Post[]
+
+  @@map("circles")
+}
+
+model CircleMember {
+  id         String   @id @default(cuid())
+  circleId   String   @map("circle_id")
+  userId     String   @map("user_id")
+  role       String   @default("MEMBER") // OWNER/ADMIN/MEMBER
+  status     Int      @default(1) // 0=待审核 1=已通过 2=已拒绝 3=已封禁
+  joinedAt   DateTime @default(now()) @map("joined_at")
+
+  circle Circle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([circleId, userId])
+  @@map("circle_members")
+}
+
+// ==================== 内容系统 ====================
+
+model Post {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  circleId     String   @map("circle_id")
+  content      String   @db.Text
+  mediaUrls    String[] @map("media_urls") @default([])
+  type         String   @default("TEXT") @db.VarChar(20) // TEXT/IMAGE/VIDEO/LINK/POLL/ANONYMOUS
+  visibility   Int      @default(1) // 0=公开 1=圈内 2=私密
+  status       Int      @default(0) // 0=正常 1=删除 2=审核中
+  likeCount    Int      @default(0) @map("like_count")
+  commentCount Int      @default(0) @map("comment_count")
+  repostCount  Int      @default(0) @map("repost_count")
+  isAnonymous  Boolean  @default(false) @map("is_anonymous")
+  isPinned     Boolean  @default(false) @map("is_pinned")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  circle   Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  comments Comment[]
+  tags     PostTag[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([circleId, createdAt(sort: Desc)])
+  @@map("posts")
+}
+
+model Comment {
+  id         String    @id @default(cuid())
+  postId     String    @map("post_id")
+  userId     String    @map("user_id")
+  parentId   String?   @map("parent_id")
+  replyToId  String?   @map("reply_to_id")
+  content    String    @db.Text
+  likeCount  Int       @default(0) @map("like_count")
+  status     Int       @default(0)
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  post    Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("comment_replies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("comment_replies")
+  replyTo   Comment?  @relation("comment_reply_to", fields: [replyToId], references: [id])
+  repliedBy Comment[] @relation("comment_reply_to")
+
+  @@index([postId, createdAt])
+  @@map("comments")
+}
+
+model Like {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  targetType Int      @map("target_type") // 1=帖子 2=评论
+  targetId   String   @map("target_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+  @@index([targetType, targetId])
+  @@map("likes")
+}
+
+model Tag {
+  id        String    @id @default(cuid())
+  name      String    @unique @db.VarChar(50)
+  postCount Int       @default(0) @map("post_count")
+  posts     PostTag[]
+
+  @@map("tags")
+}
+
+model PostTag {
+  postId String @map("post_id")
+  tagId  String @map("tag_id")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+// ==================== 消息系统 ====================
+
+model Conversation {
+  id        String   @id @default(cuid())
+  type      Int      @default(1) // 1=单聊 2=群聊
+  name      String?  @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  members  ConversationMember[]
+  messages Message[]
+
+  @@map("conversations")
+}
+
+model ConversationMember {
+  conversationId String   @map("conversation_id")
+  userId         String   @map("user_id")
+  lastReadAt     DateTime @default(now()) @map("last_read_at")
+  joinedAt       DateTime @default(now()) @map("joined_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@map("conversation_members")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String   @map("conversation_id")
+  senderId       String   @map("sender_id")
+  content        String   @db.Text
+  msgType        String   @default("TEXT") @map("msg_type") @db.VarChar(20) // TEXT/IMAGE/SYSTEM
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt(sort: Desc)])
+  @@map("messages")
+}
+
+// ==================== 通知系统 ====================
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id") // 接收者
+  actorId    String?  @map("actor_id") // 触发者
+  type       String   @db.VarChar(20) // like/comment/follow/system
+  targetType Int?     @map("target_type")
+  targetId   String?  @map("target_id")
+  content    String?  @db.Text
+  isRead     Boolean  @default(false) @map("is_read")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user   User  @relation("received_notifications", fields: [userId], references: [id], onDelete: Cascade)
+  actor  User? @relation("triggered_notifications", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isRead, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+// ==================== 认证系统 ====================
+
+model Verification {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  type      String   @db.VarChar(20) // EMAIL / LOCATION
+  value     String   @db.VarChar(255) // 邮箱地址 或 城市名
+  code      String?  @db.VarChar(6) // 邮箱验证码
+  status    Int      @default(0) // 0=待验证 1=已通过 2=已失败
+  metadata  Json?    // 存储解析结果
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, value])
+  @@map("verifications")
+}

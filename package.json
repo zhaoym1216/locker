@@ -1,0 +1,35 @@
+{
+  "name": "locker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "基于认证圈子的社交平台",
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "dev:web": "pnpm -F @locker/web dev",
+    "dev:api": "pnpm -F @locker/api dev",
+    "build": "pnpm -r run build",
+    "build:web": "pnpm -F @locker/web build",
+    "build:api": "pnpm -F @locker/api build",
+    "lint": "pnpm -r run lint",
+    "db:migrate": "pnpm -F @locker/api prisma:migrate",
+    "db:generate": "pnpm -F @locker/api prisma:generate",
+    "db:seed": "pnpm -F @locker/api prisma:seed",
+    "db:studio": "pnpm -F @locker/api prisma:studio",
+    "docker:up": "docker compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f docker/docker-compose.yml down",
+    "clean": "pnpm -r run clean && rm -rf node_modules"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "bcrypt",
+      "prisma",
+      "@prisma/client",
+      "@prisma/engines",
+      "@nestjs/core"
+    ]
+  }
+}
