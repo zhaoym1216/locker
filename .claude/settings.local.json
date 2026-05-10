@@ -65,7 +65,9 @@
       "Bash(curl -s http://localhost:3001/api/verification/location)",
       "Bash(curl -s -X POST http://localhost:3001/api/verification/location -H 'Content-Type: application/json' -d '{\"city\":\"北京\"}')",
       "Bash(awk '{print $5}')",
-      "Bash(curl -s http://localhost:3001/api/verification -H 'Authorization: Bearer test')"
+      "Bash(curl -s http://localhost:3001/api/verification -H 'Authorization: Bearer test')",
+      "Bash(git config *)",
+      "Bash(gh auth *)"
     ],
     "additionalDirectories": [
       "e:\\code\\claude-code\\locker\\apps\\web\\src\\app\\circles\\[id]",
