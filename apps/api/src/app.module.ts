@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { CircleModule } from './modules/circle/circle.module';
+import { FollowModule } from './modules/follow/follow.module';
 import { PostModule } from './modules/post/post.module';
 import { CommentModule } from './modules/comment/comment.module';
 import { NotificationModule } from './modules/notification/notification.module';
@@ -16,6 +17,7 @@ import { VerificationModule } from './modules/verification/verification.module';
     AuthModule,
     UserModule,
     CircleModule,
+    FollowModule,
     PostModule,
     CommentModule,
     NotificationModule,

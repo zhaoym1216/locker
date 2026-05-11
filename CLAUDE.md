@@ -18,8 +18,8 @@ Locker is a Chinese-language social platform built around authenticated/private 
 ```bash
 # Development (run from root)
 pnpm dev              # All apps in parallel
-pnpm dev:api          # Backend only (port 3001, nest --watch)
-pnpm dev:web          # Frontend only (port 3000, next dev)
+pnpm dev:api          # Backend only (port 3089, nest --watch)
+pnpm dev:web          # Frontend only (port 3088, next dev)
 
 # Build
 pnpm build            # All

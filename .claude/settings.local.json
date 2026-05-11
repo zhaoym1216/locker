@@ -67,7 +67,10 @@
       "Bash(awk '{print $5}')",
       "Bash(curl -s http://localhost:3001/api/verification -H 'Authorization: Bearer test')",
       "Bash(git config *)",
-      "Bash(gh auth *)"
+      "Bash(gh auth *)",
+      "Bash(pnpm -F @locker/api exec tsc --noEmit)",
+      "Bash(pnpm build *)",
+      "mcp__ide__getDiagnostics"
     ],
     "additionalDirectories": [
       "e:\\code\\claude-code\\locker\\apps\\web\\src\\app\\circles\\[id]",

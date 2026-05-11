@@ -38,6 +38,15 @@ export class CommentService {
     return comment;
   }
 
+  async findOne(id: string) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id },
+      select: { id: true, postId: true, userId: true, content: true, createdAt: true, parentId: true, replyToId: true, status: true },
+    });
+    if (!comment) throw new NotFoundException('评论不存在');
+    return comment;
+  }
+
   async create(userId: string, dto: CreateCommentDto) {
     const post = await this.prisma.post.findUnique({
       where: { id: dto.postId },
@@ -231,7 +240,7 @@ export class CommentService {
   async like(userId: string, commentId: string) {
     const comment = await this.prisma.comment.findUnique({
       where: { id: commentId },
-      select: { id: true, userId: true, post: { select: { circleId: true } } },
+      select: { id: true, userId: true, postId: true, post: { select: { circleId: true } } },
     });
     if (!comment) throw new NotFoundException('评论不存在');
     await this.checkMembership(comment.post.circleId, userId);
@@ -251,12 +260,13 @@ export class CommentService {
 
     if (comment.userId !== userId) {
       const liker = await this.prisma.user.findUnique({ where: { id: userId }, select: { nickname: true } });
+      // 通知指向所在帖子,便于前端跳转到帖子详情页
       await this.notificationService.create({
         userId: comment.userId,
         actorId: userId,
         type: 'like',
-        targetType: 2,
-        targetId: commentId,
+        targetType: 1,
+        targetId: comment.postId,
         content: `${liker?.nickname || '用户'} 赞了你的评论`,
       });
     }

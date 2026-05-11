@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3089/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -49,6 +49,16 @@ export const userApi = {
   getUser: (id: string) => api.get(`/users/${id}`),
   updateMe: (data: any) => api.patch('/users/me', data),
   search: (q: string, page?: number) => api.get('/users/search', { params: { q, page } }),
+  getUserCircles: (id: string) => api.get(`/users/${id}/circles`),
+};
+
+// Follow API
+export const followApi = {
+  follow: (userId: string) => api.post(`/users/${userId}/follow`),
+  unfollow: (userId: string) => api.delete(`/users/${userId}/follow`),
+  status: (userId: string) => api.get(`/users/${userId}/follow-status`),
+  followers: (userId: string, page?: number) => api.get(`/users/${userId}/followers`, { params: { page } }),
+  following: (userId: string, page?: number) => api.get(`/users/${userId}/following`, { params: { page } }),
 };
 
 // Circle API
@@ -80,6 +90,8 @@ export const postApi = {
   getFeed: (page?: number) => api.get('/posts/feed', { params: { page } }),
   getByCircle: (circleId: string, page?: number) =>
     api.get(`/posts/circle/${circleId}`, { params: { page } }),
+  getByUser: (userId: string, page?: number) =>
+    api.get(`/posts/user/${userId}`, { params: { page } }),
   get: (id: string) => api.get(`/posts/${id}`),
   like: (id: string) => api.post(`/posts/${id}/like`),
   update: (id: string, content: string) => api.patch(`/posts/${id}`, { content }),
@@ -91,6 +103,7 @@ export const postApi = {
 export const commentApi = {
   create: (data: { postId: string; content: string; parentId?: string; replyToId?: string }) =>
     api.post('/comments', data),
+  get: (id: string) => api.get(`/comments/${id}`),
   getByPost: (postId: string, page?: number) =>
     api.get(`/comments/post/${postId}`, { params: { page } }),
   getReplies: (commentId: string, page?: number) =>

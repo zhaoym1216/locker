@@ -82,4 +82,24 @@ export class UserService {
 
     return { items, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
   }
+
+  async getUserCircles(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+    if (!user) throw new NotFoundException('用户不存在');
+
+    const memberships = await this.prisma.circleMember.findMany({
+      where: {
+        userId,
+        status: 1,
+        circle: { isPublic: true, status: 0 },
+      },
+      include: {
+        circle: {
+          include: { _count: { select: { members: true, posts: true } } },
+        },
+      },
+      orderBy: { joinedAt: 'desc' },
+    });
+    return memberships.map((m) => ({ ...m.circle, myRole: m.role }));
+  }
 }

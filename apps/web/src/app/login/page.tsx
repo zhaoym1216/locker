@@ -30,7 +30,8 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
-        <h1 className="text-2xl font-bold text-center mb-6">登录 Locker</h1>
+        <img src="/enclave_logo.svg" alt="Enclave" className="h-28 w-auto mx-auto mb-2" />
+        <h1 className="text-xl font-semibold text-center mb-6 text-gray-700">欢迎登录</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -29,7 +29,7 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: process.env.WEB_URL || 'http://localhost:3000',
+    origin: process.env.WEB_URL || 'http://localhost:3088',
     credentials: true,
   });
 
@@ -43,7 +43,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.API_PORT || 3001;
+  const port = process.env.API_PORT || 3089;
   await app.listen(port);
   console.log(`🚀 Locker API running on http://localhost:${port}`);
   console.log(`📄 Swagger docs: http://localhost:${port}/api/docs`);

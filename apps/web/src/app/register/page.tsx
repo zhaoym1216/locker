@@ -33,7 +33,8 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
-        <h1 className="text-2xl font-bold text-center mb-6">注册 Locker</h1>
+        <img src="/enclave_logo.svg" alt="Enclave" className="h-28 w-auto mx-auto mb-2" />
+        <h1 className="text-xl font-semibold text-center mb-6 text-gray-700">创建账号</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">用户名</label>

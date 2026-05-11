@@ -2,8 +2,11 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Locker - 认证圈子社交平台',
+  title: 'Enclave - 认证圈子社交平台',
   description: '基于认证圈子的社交平台，发现志同道合的人',
+  icons: {
+    icon: '/enclave_icon.svg',
+  },
 };
 
 export default function RootLayout({

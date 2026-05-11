@@ -32,6 +32,12 @@ export class CommentController {
     return this.commentService.getReplies(id, dto);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: '获取评论基础信息(含 postId)' })
+  findOne(@Param('id') id: string) {
+    return this.commentService.findOne(id);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: '编辑评论' })
   update(@Param('id') id: string, @CurrentUser('id') userId: string, @Body('content') content: string) {

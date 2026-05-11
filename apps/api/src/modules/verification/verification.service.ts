@@ -101,12 +101,12 @@ export class VerificationService {
     const from = this.config.get('SMTP_USER', 'locker_bot@126.com');
     try {
       await this.transporter.sendMail({
-        from: `Locker <${from}>`,
+        from: `Enclave <${from}>`,
         to: email,
-        subject: '【Locker】邮箱验证码',
+        subject: '【Enclave】邮箱验证码',
         html: `
           <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-            <h2 style="color: #1e40af;">Locker 邮箱验证</h2>
+            <h2 style="color: #3C3489;">Enclave 邮箱验证</h2>
             <p>你好，你正在验证邮箱地址，验证码为：</p>
             <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #111; background: #f3f4f6; padding: 16px; text-align: center; border-radius: 8px; margin: 20px 0;">
               ${code}
@@ -181,7 +181,7 @@ export class VerificationService {
       const key = this.config.get('QQ_MAP_KEY', 'OB4BZ-D4W3U-B7VVO-4PJWW-6TKDJ-WPB77');
       const url = `https://apis.map.qq.com/ws/geocoder/v1/?location=${lat},${lng}&key=${key}&get_poi=0`;
       const res = await fetch(url, {
-        headers: { 'User-Agent': 'LockerApp/1.0' },
+        headers: { 'User-Agent': 'EnclaveApp/1.0' },
         signal: AbortSignal.timeout(8000),
       });
       if (!res.ok) return null;
@@ -203,7 +203,7 @@ export class VerificationService {
     try {
       const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=zh-CN`;
       const res = await fetch(url, {
-        headers: { 'User-Agent': 'LockerApp/1.0' },
+        headers: { 'User-Agent': 'EnclaveApp/1.0' },
         signal: AbortSignal.timeout(10000),
       });
       if (!res.ok) return null;

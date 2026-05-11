@@ -134,17 +134,82 @@ export class PostService {
     return { items: itemsWithLikeStatus, total, page: dto.page, pageSize: dto.pageSize, totalPages: Math.ceil(total / dto.pageSize) };
   }
 
-  async findOne(id: string) {
+  async findByUser(targetUserId: string, dto: PaginationDto, viewerId: string): Promise<PaginatedResult<any>> {
+    // 查看者只能看到自己也加入的圈子里,目标用户发的帖子
+    const memberships = await this.prisma.circleMember.findMany({
+      where: { userId: viewerId, status: 1 },
+      select: { circleId: true },
+    });
+    const circleIds = memberships.map((m) => m.circleId);
+    if (circleIds.length === 0) {
+      return { items: [], total: 0, page: dto.page, pageSize: dto.pageSize, totalPages: 0 };
+    }
+
+    const where = { userId: targetUserId, circleId: { in: circleIds }, status: 0, isAnonymous: false };
+    const [items, total] = await Promise.all([
+      this.prisma.post.findMany({
+        where,
+        include: {
+          user: { select: { id: true, username: true, nickname: true, avatarUrl: true } },
+          circle: { select: { id: true, name: true, type: true } },
+          _count: { select: { comments: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: dto.skip,
+        take: dto.pageSize,
+      }),
+      this.prisma.post.count({ where }),
+    ]);
+
+    const postIds = items.map((p) => p.id);
+    const likeCounts = await this.prisma.like.groupBy({
+      by: ['targetId'],
+      where: { targetType: 1, targetId: { in: postIds } },
+      _count: true,
+    });
+    const likeCountMap = new Map(likeCounts.map((l) => [l.targetId, l._count]));
+
+    const userLikes = await this.prisma.like.findMany({
+      where: { userId: viewerId, targetType: 1, targetId: { in: postIds } },
+      select: { targetId: true },
+    });
+    const likedSet = new Set(userLikes.map((l) => l.targetId));
+
+    const itemsWithLikeStatus = items.map((post) => ({
+      ...post,
+      likeCount: likeCountMap.get(post.id) ?? post.likeCount,
+      isLiked: likedSet.has(post.id),
+    }));
+
+    return { items: itemsWithLikeStatus, total, page: dto.page, pageSize: dto.pageSize, totalPages: Math.ceil(total / dto.pageSize) };
+  }
+
+  async findOne(id: string, viewerId: string) {
     const post = await this.prisma.post.findUnique({
       where: { id },
       include: {
         user: { select: { id: true, username: true, nickname: true, avatarUrl: true } },
+        circle: { select: { id: true, name: true, type: true } },
         tags: { include: { tag: true } },
         _count: { select: { comments: true } },
       },
     });
     if (!post) throw new NotFoundException('动态不存在');
-    return post;
+    await this.checkMembership(post.circleId, viewerId);
+
+    const [likeCountRow, myLike] = await Promise.all([
+      this.prisma.like.groupBy({
+        by: ['targetId'],
+        where: { targetType: 1, targetId: id },
+        _count: true,
+      }),
+      this.prisma.like.findUnique({
+        where: { userId_targetType_targetId: { userId: viewerId, targetType: 1, targetId: id } },
+      }),
+    ]);
+    const likeCount = likeCountRow[0]?._count ?? post.likeCount;
+
+    return { ...post, likeCount, isLiked: !!myLike };
   }
 
   async like(userId: string, postId: string) {

@@ -1,4 +1,4 @@
-export const APP_NAME = 'Locker';
+export const APP_NAME = 'Enclave';
 export const APP_VERSION = '0.1.0';
 
 export const API_PREFIX = '/api';

@@ -30,11 +30,16 @@ export class PostController {
     return this.postService.findByCircle(circleId, dto, userId);
   }
 
-  @Public()
+  @Get('user/:userId')
+  @ApiOperation({ summary: '获取用户的动态（仅查看者也加入的圈子）' })
+  findByUser(@CurrentUser('id') viewerId: string, @Param('userId') userId: string, @Query() dto: PaginationDto) {
+    return this.postService.findByUser(userId, dto, viewerId);
+  }
+
   @Get(':id')
-  @ApiOperation({ summary: '获取动态详情' })
-  findOne(@Param('id') id: string) {
-    return this.postService.findOne(id);
+  @ApiOperation({ summary: '获取动态详情(仅圈内成员可见)' })
+  findOne(@CurrentUser('id') userId: string, @Param('id') id: string) {
+    return this.postService.findOne(id, userId);
   }
 
   @Post(':id/like')

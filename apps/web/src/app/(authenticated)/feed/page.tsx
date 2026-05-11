@@ -142,10 +142,8 @@ export default function FeedPage() {
 
   const renderComment = (c: any, postId: string, parentId: string, isReply: boolean = false) => (
     <div key={c.id} className={`flex gap-3 ${isReply ? 'ml-11' : ''}`}>
-      <div className={isReply
-        ? 'w-7 h-7 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center text-white text-xs shrink-0'
-        : 'w-8 h-8 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center text-white text-xs shrink-0'
-      }>
+      <div onClick={() => router.push(`/users/${c.user.id}`)}
+        className={`${isReply ? 'w-7 h-7' : 'w-8 h-8'} bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center text-white text-xs shrink-0 cursor-pointer hover:ring-2 hover:ring-blue-200 transition`}>
         {c.user.nickname[0]}
       </div>
       <div className="flex-1 min-w-0">
@@ -160,7 +158,8 @@ export default function FeedPage() {
         ) : (
           <>
             <p className="text-sm">
-              <span className="font-medium text-gray-900">{c.user.nickname}</span>
+              <button onClick={() => router.push(`/users/${c.user.id}`)}
+                className="font-medium text-gray-900 hover:text-blue-600 transition">{c.user.nickname}</button>
               {c.replyTo && c.replyToId !== parentId && (
                 <span className="text-gray-400"> 回复 <span className="text-gray-600">{c.replyTo.user?.nickname}</span></span>
               )}
@@ -214,12 +213,20 @@ export default function FeedPage() {
                 <div key={post.id} className="bg-white rounded-2xl shadow-sm border p-5">
                   {/* 帖子头部 */}
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium shrink-0">
+                    <div onClick={() => !post.isAnonymous && router.push(`/users/${post.user.id}`)}
+                      className={`w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium shrink-0 ${!post.isAnonymous ? 'cursor-pointer hover:ring-2 hover:ring-blue-200 transition' : ''}`}>
                       {post.isAnonymous ? '?' : post.user.nickname[0]}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-900">{post.isAnonymous ? '匿名用户' : post.user.nickname}</p>
+                        {post.isAnonymous ? (
+                          <p className="font-medium text-gray-900">匿名用户</p>
+                        ) : (
+                          <button onClick={() => router.push(`/users/${post.user.id}`)}
+                            className="font-medium text-gray-900 hover:text-blue-600 transition">
+                            {post.user.nickname}
+                          </button>
+                        )}
                         {post.isPinned && <span className="px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-600 rounded">置顶</span>}
                       </div>
                       <p className="text-xs text-gray-400">{new Date(post.createdAt).toLocaleString()}</p>
@@ -254,6 +261,9 @@ export default function FeedPage() {
                     }} className={`flex items-center gap-1.5 text-sm transition ${isCommentAreaOpen ? 'text-blue-500' : 'text-gray-400 hover:text-blue-500'}`}>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                       {commentCount > 0 ? commentCount : '评论'}
+                    </button>
+                    <button onClick={() => router.push(`/posts/${post.id}`)} className="ml-auto text-sm text-gray-400 hover:text-blue-500 transition">
+                      查看详情 →
                     </button>
                   </div>
 
