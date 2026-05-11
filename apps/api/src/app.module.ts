@@ -9,6 +9,7 @@ import { PostModule } from './modules/post/post.module';
 import { CommentModule } from './modules/comment/comment.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { VerificationModule } from './modules/verification/verification.module';
+import { SearchModule } from './modules/search/search.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { VerificationModule } from './modules/verification/verification.module';
     CommentModule,
     NotificationModule,
     VerificationModule,
+    SearchModule,
   ],
 })
 export class AppModule {}

@@ -3,7 +3,7 @@
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Header() {
   const router = useRouter();
@@ -12,6 +12,8 @@ export default function Header() {
   const { user, logout } = useAuthStore();
   const unreadCount = useNotificationStore((s) => s.unreadCount);
   const refreshUnread = useNotificationStore((s) => s.refresh);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
 
   const currentTab = searchParams.get('tab') || 'content';
   const isFeed = pathname === '/feed';
@@ -36,6 +38,7 @@ export default function Header() {
   };
 
   return (
+    <>
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
       <div className="px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Logo */}
@@ -54,6 +57,25 @@ export default function Header() {
             发现
           </button>
         </nav>
+
+        {/* 搜索框 */}
+        <div className="flex-1 max-w-md mx-4 hidden md:block">
+          <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`); }}
+            className="relative">
+            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="搜索用户、圈子、动态..."
+              className="w-full pl-9 pr-4 py-2 bg-gray-100 border border-transparent rounded-xl text-sm focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 outline-none transition" />
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </form>
+        </div>
+
+        {/* 移动端搜索按钮 */}
+        <button onClick={() => setShowSearch(!showSearch)} className="md:hidden p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
 
         {/* 右侧 */}
         <div className="flex items-center gap-3">
@@ -84,5 +106,19 @@ export default function Header() {
         </div>
       </div>
     </header>
+      {/* 移动端搜索展开栏 */}
+      {showSearch && (
+        <div className="md:hidden bg-white border-b border-gray-200 px-4 py-2">
+          <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) { router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`); setShowSearch(false); } }}
+            className="relative">
+            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="搜索用户、圈子、动态..." autoFocus
+              className="w-full pl-9 pr-4 py-2 bg-gray-100 border border-transparent rounded-xl text-sm focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 outline-none transition" />
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </form>
+        </div>
+      )}
+    </>
   );
 }

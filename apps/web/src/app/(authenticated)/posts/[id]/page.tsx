@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { postApi, commentApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
+import { renderContentWithTags } from '@/lib/tags';
 
 const CIRCLE_TYPE_LABELS: Record<string, string> = {
   INDUSTRY: '行业圈', ALUMNI: '校友圈', INTEREST: '兴趣圈', REGION: '地域圈',
@@ -266,7 +267,9 @@ export default function PostDetailPage() {
             </div>
           </div>
         ) : (
-          <p className="text-gray-800 whitespace-pre-wrap leading-relaxed mb-4">{post.content}</p>
+          <p className="text-gray-800 whitespace-pre-wrap leading-relaxed mb-4">
+            {renderContentWithTags(post.content, (name) => router.push(`/tags/${encodeURIComponent(name)}`))}
+          </p>
         )}
 
         <div className="flex items-center gap-6 pt-3 border-t border-gray-100">
@@ -320,7 +323,7 @@ export default function PostDetailPage() {
                   {replyingTo?.parentId === c.id && (
                     <div className="ml-11 mt-3 flex gap-2">
                       <input value={replyContent} onChange={(e) => setReplyContent(e.target.value)}
-                        placeholder={`回复 @${replyingTo.nickname}...`}
+                        placeholder={`回复 @${replyingTo?.nickname ?? ''}...`}
                         className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                         onKeyDown={(e) => { if (e.key === 'Enter') handleReply(); if (e.key === 'Escape') setReplyingTo(null); }}
                         autoFocus />

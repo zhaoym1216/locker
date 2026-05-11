@@ -36,9 +36,9 @@
 
 | 实体 | schema 定义 | 当前使用情况 |
 |---|---|---|
-| `Follow` | ✅ | ❌ 无 API |
+| `Follow` | ✅ | ✅ FollowModule + 个人主页 |
 | `Conversation` / `ConversationMember` / `Message` | ✅ | ❌ 无 API |
-| `Tag` / `PostTag` | ✅ | ❌ 发帖未写入 |
+| `Tag` / `PostTag` | ✅ | ✅ 发帖自动解析写入 + 搜索/话题 API |
 | `UserAuth`(第三方登录) | ✅ | ❌ 仅 schema |
 | `UserSetting.notifyConfig` | ✅(JSON 默认 `{}`) | ❌ 无配置读写 |
 
@@ -46,16 +46,16 @@
 
 ## 三、路线图
 
-### Phase 1 — 社交关系闭环 🎯 **当前优先**
+### Phase 1 — 社交关系闭环 ✅ **已完成**
 
 **目标:让"人"成为内容外的第二个中心,补齐个人主页体验。**
 
-- [ ] **关注系统**
+- [x] **关注系统**
   - 后端 `FollowModule`: follow/unfollow、关注列表、粉丝列表、是否相互关注
   - 使用 `Follow` 表的 status 区分 0=已关注 1=拉黑
   - 关注/被关注通知接入 `NotificationService`(type=`follow`)
   - `User._count` 已有 followers/following,接到返回中即可
-- [ ] **个人主页 `/users/[id]`**
+- [x] **个人主页 `/users/[id]`**
   - 顶部:头像/昵称/简介/认证徽章(verifiedEmail/verifiedCity)、关注/粉丝/帖子/圈子计数
   - Tab:TA 的动态 / TA 的圈子(公开) / 粉丝 / 关注
   - 自己主页 → 编辑入口;他人主页 → 关注/私信按钮(私信后续阶段)
@@ -68,16 +68,16 @@
 
 ---
 
-### Phase 2 — 搜索与话题
+### Phase 2 — 搜索与话题 ✅ **已完成**
 
 **目标:用内容发现驱动增长,真正用起来 `Tag`/`PostTag`。**
 
-- [ ] **SearchModule(统一搜索)**
+- [x] **SearchModule(统一搜索)**
   - 用户搜索(复用现有 `userApi.search`)
   - 圈子搜索(按名称/描述/标签)
   - 帖子搜索(内容 ilike,仅限用户已加入圈子)
   - 综合搜索入口页 `/search?q=xxx&type=all|user|circle|post`
-- [ ] **话题标签系统**
+- [x] **话题标签系统**
   - 发帖时解析 `#xxx#` 或 `#xxx `→ 写入 `Tag` / `PostTag`
   - 单篇 Post 返回 tags 数组,前端渲染可点击胶囊
   - 话题聚合页 `/tags/[name]`:帖子流 + 参与者 + 相关圈子
@@ -131,8 +131,8 @@
 ## 四、立即开工(本轮)
 
 1. ✅ 撰写本路线图
-2. 🔜 **Phase 1 — 关注系统 + 个人主页**(方向 2)
-3. 🔜 **Phase 2 — 搜索 + 话题标签**(方向 4)
+2. ✅ **Phase 1 — 关注系统 + 个人主页**(方向 2)
+3. ✅ **Phase 2 — 搜索 + 话题标签**(方向 4)
 
 ---
 

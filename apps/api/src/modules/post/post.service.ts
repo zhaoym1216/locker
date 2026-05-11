@@ -24,7 +24,7 @@ export class PostService {
   async create(userId: string, dto: CreatePostDto) {
     await this.checkMembership(dto.circleId, userId);
 
-    return this.prisma.post.create({
+    const post = await this.prisma.post.create({
       data: {
         userId,
         circleId: dto.circleId,
@@ -35,8 +35,46 @@ export class PostService {
       },
       include: {
         user: { select: { id: true, username: true, nickname: true, avatarUrl: true } },
+        tags: { include: { tag: true } },
       },
     });
+
+    await this.syncTags(post.id, dto.content);
+
+    return this.prisma.post.findUnique({
+      where: { id: post.id },
+      include: {
+        user: { select: { id: true, username: true, nickname: true, avatarUrl: true } },
+        tags: { include: { tag: true } },
+      },
+    });
+  }
+
+  private extractTagNames(content: string): string[] {
+    const names = new Set<string>();
+    // #话题# 格式
+    for (const m of content.matchAll(/#([^#\s]{1,20})#/g)) {
+      names.add(m[1]);
+    }
+    // #话题 (空格或行尾结尾) 格式
+    for (const m of content.matchAll(/#([^\s#]{1,20})(?=\s|$)/g)) {
+      names.add(m[1]);
+    }
+    return [...names];
+  }
+
+  private async syncTags(postId: string, content: string) {
+    const tagNames = this.extractTagNames(content);
+    if (tagNames.length === 0) return;
+
+    for (const name of tagNames) {
+      const tag = await this.prisma.tag.upsert({
+        where: { name },
+        create: { name, postCount: 1 },
+        update: { postCount: { increment: 1 } },
+      });
+      await this.prisma.postTag.create({ data: { postId, tagId: tag.id } });
+    }
   }
 
   async findFeed(dto: PaginationDto, userId: string): Promise<PaginatedResult<any>> {
@@ -57,6 +95,7 @@ export class PostService {
         include: {
           user: { select: { id: true, username: true, nickname: true, avatarUrl: true } },
           circle: { select: { id: true, name: true, type: true } },
+          tags: { include: { tag: true } },
           _count: { select: { comments: true } },
         },
         orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
@@ -152,6 +191,7 @@ export class PostService {
         include: {
           user: { select: { id: true, username: true, nickname: true, avatarUrl: true } },
           circle: { select: { id: true, name: true, type: true } },
+          tags: { include: { tag: true } },
           _count: { select: { comments: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -294,6 +334,12 @@ export class PostService {
     const isOwner = post.userId === userId;
     const isAdmin = member.role === 'OWNER' || member.role === 'ADMIN';
     if (!isOwner && !isAdmin) throw new ForbiddenException('没有权限删除此动态');
+
+    // 递减标签计数
+    const postTags = await this.prisma.postTag.findMany({ where: { postId } });
+    for (const pt of postTags) {
+      await this.prisma.tag.update({ where: { id: pt.tagId }, data: { postCount: { decrement: 1 } } });
+    }
 
     return this.prisma.post.update({ where: { id: postId }, data: { status: 1 } });
   }

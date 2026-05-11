@@ -120,6 +120,21 @@ export const notificationApi = {
   markAllAsRead: () => api.patch('/notifications/read-all'),
 };
 
+// Search API
+export const searchApi = {
+  all: (q: string) => api.get('/search', { params: { q, type: 'all' } }),
+  users: (q: string, page?: number) => api.get('/search', { params: { q, type: 'user', page } }),
+  circles: (q: string, page?: number) => api.get('/search', { params: { q, type: 'circle', page } }),
+  posts: (q: string, page?: number) => api.get('/search', { params: { q, type: 'post', page } }),
+};
+
+// Tag API
+export const tagApi = {
+  hot: () => api.get('/tags/hot'),
+  get: (name: string) => api.get(`/tags/${encodeURIComponent(name)}`),
+  posts: (name: string, page?: number) => api.get(`/posts/tag/${encodeURIComponent(name)}`, { params: { page } }),
+};
+
 // Verification API
 export const verificationApi = {
   list: () => api.get('/verification'),

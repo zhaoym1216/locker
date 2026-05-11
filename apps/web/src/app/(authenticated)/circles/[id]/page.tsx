@@ -494,7 +494,7 @@ export default function CircleDetailPage() {
                                   {replyingTo?.parentId === c.id && (
                                     <div className="ml-11 mt-3 flex gap-2">
                                       <input value={replyContent} onChange={(e) => setReplyContent(e.target.value)}
-                                        placeholder={`回复 @${replyingTo.nickname}...`}
+                                        placeholder={`回复 @${replyingTo?.nickname ?? ''}...`}
                                         className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                                         onKeyDown={(e) => { if (e.key === 'Enter') handleReply(post.id); if (e.key === 'Escape') setReplyingTo(null); }}
                                         autoFocus />

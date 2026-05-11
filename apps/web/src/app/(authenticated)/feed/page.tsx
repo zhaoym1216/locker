@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth';
-import { circleApi, postApi, commentApi } from '@/lib/api';
+import { circleApi, postApi, commentApi, tagApi } from '@/lib/api';
+import { renderContentWithTags } from '@/lib/tags';
 
 const CIRCLE_TYPE_LABELS: Record<string, string> = {
   INDUSTRY: '行业圈', ALUMNI: '校友圈', INTEREST: '兴趣圈', REGION: '地域圈',
@@ -37,6 +38,7 @@ export default function FeedPage() {
   const tab: Tab = (searchParams.get('tab') as Tab) || 'content';
   // 发现
   const [circles, setCircles] = useState<any[]>([]);
+  const [hotTags, setHotTags] = useState<any[]>([]);
   // 内容
   const [posts, setPosts] = useState<any[]>([]);
   const [commentsMap, setCommentsMap] = useState<Record<string, any[]>>({});
@@ -67,6 +69,7 @@ export default function FeedPage() {
   const loadCircles = async () => {
     try { const res: any = await circleApi.listWithStatus(); setCircles(res.items); }
     catch { try { const res: any = await circleApi.list(); setCircles(res.items); } catch {} }
+    try { const res: any = await tagApi.hot(); setHotTags(res); } catch {}
   };
 
   const loadFeedPosts = async () => {
@@ -240,7 +243,9 @@ export default function FeedPage() {
 
                   {/* 帖子内容 */}
                   <div className="mb-3">
-                    <p className={`text-gray-800 whitespace-pre-wrap leading-relaxed ${!isContentExpanded && isLongContent ? 'line-clamp-6' : ''}`}>{post.content}</p>
+                    <p className={`text-gray-800 whitespace-pre-wrap leading-relaxed ${!isContentExpanded && isLongContent ? 'line-clamp-6' : ''}`}>
+                      {renderContentWithTags(post.content, (name) => router.push(`/tags/${encodeURIComponent(name)}`))}
+                    </p>
                     {isLongContent && (
                       <button onClick={() => setExpandedContent(prev => ({ ...prev, [post.id]: !prev[post.id] }))}
                         className="text-sm text-blue-500 hover:text-blue-600 mt-1">
@@ -291,7 +296,7 @@ export default function FeedPage() {
                                 )}
                                 {replyingTo?.parentId === c.id && (
                                   <div className="ml-11 mt-3 flex gap-2">
-                                    <input value={replyContent} onChange={(e) => setReplyContent(e.target.value)} placeholder={`回复 @${replyingTo.nickname}...`}
+                                    <input value={replyContent} onChange={(e) => setReplyContent(e.target.value)} placeholder={`回复 @${replyingTo?.nickname ?? ''}...`}
                                       className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                                       onKeyDown={(e) => { if (e.key === 'Enter') handleReply(post.id); if (e.key === 'Escape') setReplyingTo(null); }} autoFocus />
                                     <button onClick={() => handleReply(post.id)} disabled={!replyContent.trim()}
@@ -330,6 +335,22 @@ export default function FeedPage() {
         {/* 发现 Tab */}
         {tab === 'discover' && (
           <div>
+            {/* 热门话题 */}
+            {hotTags.length > 0 && (
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">热门话题</h2>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {hotTags.map((tag: any) => (
+                    <button key={tag.id} onClick={() => router.push(`/tags/${encodeURIComponent(tag.name)}`)}
+                      className="px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-sm font-medium hover:bg-blue-100 transition whitespace-nowrap shrink-0">
+                      #{tag.name}
+                      <span className="ml-1 text-blue-400">{tag.postCount}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-semibold text-gray-900">发现圈子</h2>
               <button onClick={() => router.push('/circles/create')}

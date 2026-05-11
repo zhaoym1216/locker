@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth';
 import { userApi, followApi, postApi, circleApi, verificationApi } from '@/lib/api';
+import { renderContentWithTags } from '@/lib/tags';
 
 const CIRCLE_TYPE_LABELS: Record<string, string> = {
   INDUSTRY: '行业圈', ALUMNI: '校友圈', INTEREST: '兴趣圈', REGION: '地域圈',
@@ -352,7 +353,9 @@ export default function UserProfilePage() {
                   {CIRCLE_TYPE_LABELS[post.circle.type]} · {post.circle.name}
                 </button>
               </div>
-              <p className="text-gray-800 whitespace-pre-wrap leading-relaxed line-clamp-6">{post.content}</p>
+              <p className="text-gray-800 whitespace-pre-wrap leading-relaxed line-clamp-6">
+                {renderContentWithTags(post.content, (name) => router.push(`/tags/${encodeURIComponent(name)}`))}
+              </p>
               <div className="flex items-center gap-6 pt-3 mt-3 border-t border-gray-100 text-sm text-gray-400">
                 <span className={post.isLiked ? 'text-red-500' : ''}>❤ {post.likeCount ?? 0}</span>
                 <span>💬 {post._count?.comments ?? 0}</span>

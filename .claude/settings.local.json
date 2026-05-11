@@ -70,7 +70,9 @@
       "Bash(gh auth *)",
       "Bash(pnpm -F @locker/api exec tsc --noEmit)",
       "Bash(pnpm build *)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(pnpm build:api)",
+      "Bash(pnpm build:web)"
     ],
     "additionalDirectories": [
       "e:\\code\\claude-code\\locker\\apps\\web\\src\\app\\circles\\[id]",
